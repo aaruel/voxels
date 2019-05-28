@@ -504,11 +504,11 @@ struct TransVoxelRun
 				Block& block = m_LoadedBlocks[blockIt];
 				{
 					static auto tid = 0;
-                    #ifdef _WIN32
-					tid = GetCurrentThreadId();
-                    #else
-                    tid = getpid();
-                    #endif
+					#ifdef _WIN32
+						tid = GetCurrentThreadId();
+					#else
+						tid = getpid();
+					#endif
 					auto cache = m_PerThreadCaches.find(tid);
 					if (cache == m_PerThreadCaches.end()) {
 						auto gridCachePtr = new GridBlocksCache(m_Grid);
@@ -544,7 +544,7 @@ private:
 	TransVoxelRun(const TransVoxelRun&);
 	TransVoxelRun& operator=(const TransVoxelRun&);
 
-    enum { INVALID_INDEX = 0xFFFFFFFF };
+	enum { INVALID_INDEX = 0xFFFFFFFF };
 
 	struct Cell
 	{
@@ -1198,7 +1198,7 @@ private:
 		}
 
 		const Voxels::VoxelGrid& m_Grid;
-        enum { BLOCKS_CACHE_SIZE = 8u, FREE_BLOCK = 0xFFFFFFFF };
+		enum { BLOCKS_CACHE_SIZE = 8u, FREE_BLOCK = 0xFFFFFFFF };
 
 		glm::vec3 m_GridSzMinusOne;
 		glm::vec3 m_BlockExt;

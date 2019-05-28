@@ -13,7 +13,7 @@
 namespace Voxels
 {
 
-const int VoxelGrid::CURRENT_FILE_VER;
+const unsigned VoxelGrid::CURRENT_FILE_VER;
 
 struct PackedGridImpl : public Grid::PackedGrid
 {

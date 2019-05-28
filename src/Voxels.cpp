@@ -19,30 +19,30 @@ void DefaultDeallocate(void* ptr)
 
 void* DefaultAllocateAligned(size_t size, size_t alignment)
 {
-    #ifdef _WIN32
-	    return _aligned_malloc(size, alignment);
-    #else
-        // https://stackoverflow.com/q/38088732
-        void* p1; // original block
-        void** p2; // aligned block
-        int offset = alignment - 1 + sizeof(void*);
-        if ((p1 = (void*)malloc(size + offset)) == NULL)
-        {
-           return NULL;
-        }
-        p2 = (void**)(((size_t)(p1) + offset) & ~(alignment - 1));
-        p2[-1] = p1;
-        return p2;
-    #endif
+	#ifdef _WIN32
+		return _aligned_malloc(size, alignment);
+	#else
+		// https://stackoverflow.com/q/38088732
+		void* p1; // original block
+		void** p2; // aligned block
+		int offset = alignment - 1 + sizeof(void*);
+		if ((p1 = (void*)malloc(size + offset)) == NULL)
+		{
+			return NULL;
+		}
+		p2 = (void**)(((size_t)(p1) + offset) & ~(alignment - 1));
+		p2[-1] = p1;
+		return p2;
+	#endif
 }
 
 void DefaultDeallocateAligned(void* ptr)
 {
     #ifdef _WIN32
-	    _aligned_free(ptr);
+		_aligned_free(ptr);
     #else
-        // https://stackoverflow.com/q/38088732
-        free(((void**)ptr)[-1]);
+		// https://stackoverflow.com/q/38088732
+		free(((void**)ptr)[-1]);
     #endif
 }
 

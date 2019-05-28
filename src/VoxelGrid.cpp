@@ -5,13 +5,15 @@
 
 #include "VoxelGrid.h"
 #include "../include/VoxelSurface.h"
-#include <../dx11-framework/Utilities/MathInlines.h>
+#include <MathInlines.h>
 
 #define SETFLAG(Flag, Bit) ((Flag) |= (Bit))
 #define UNSETFLAG(Flag, Bit) ((Flag) &= ~(Bit))
 
 namespace Voxels
 {
+
+const int VoxelGrid::CURRENT_FILE_VER;
 
 struct PackedGridImpl : public Grid::PackedGrid
 {
@@ -84,7 +86,6 @@ VoxelGrid::VoxelGrid(unsigned w, unsigned d, unsigned h,
 	, m_Height(h)
 	, m_MemoryForBlocks(0)
 {
-	PROFI_FUNC
 
 	// Create per-block data
 	auto blocksX = m_Width / BLOCK_EXTENTS;
@@ -137,7 +138,6 @@ VoxelGrid::VoxelGrid(unsigned w, unsigned d, unsigned h)
 	, m_Height(h)
 	, m_MemoryForBlocks(0)
 {
-	PROFI_FUNC
 	// Create per-block data
 	auto blocksX = m_Width / BLOCK_EXTENTS;
 	auto blocksY = m_Depth / BLOCK_EXTENTS;
@@ -162,7 +162,6 @@ VoxelGrid::VoxelGrid(unsigned w, const char* heightmap)
 	, m_Height(w)
 	, m_MemoryForBlocks(0)
 {
-	PROFI_FUNC
 	// Create per-block data
 	auto blocksX = m_Width / BLOCK_EXTENTS;
 	auto blocksY = m_Depth / BLOCK_EXTENTS;
@@ -214,7 +213,6 @@ VoxelGrid::VoxelGrid(unsigned w, const char* heightmap)
 
 VoxelGrid* VoxelGrid::Load(const char* data)
 {
-	PROFI_FUNC
 	const char* dataPtr = data;
 
 	auto read = [&dataPtr](char* output, unsigned sz){
@@ -268,7 +266,6 @@ VoxelGrid* VoxelGrid::Load(const char* data)
 
 Grid::PackedGrid* VoxelGrid::PackForSave() const
 {
-	PROFI_FUNC
 	std::unique_ptr<PackedGridImpl> pack(new PackedGridImpl);
 
 	unsigned offset = 0;
@@ -391,7 +388,6 @@ std::pair<glm::vec3, glm::vec3> VoxelGrid::InjectSurface(
 	VoxelSurface* surface,
 	InjectionType type)
 {
-	PROFI_FUNC
 	std::vector<TouchedBlock> touchedBlocks;
 	IdentifyTouchedBlocks(position, extents, touchedBlocks);
 
@@ -493,7 +489,6 @@ std::pair<glm::vec3, glm::vec3> VoxelGrid::InjectMaterial(
 	MaterialId material,
 	bool addSubtractBlend)
 {
-	PROFI_FUNC
 	std::vector<TouchedBlock> touchedBlocks;
 	IdentifyTouchedBlocks(position, extents, touchedBlocks);
 

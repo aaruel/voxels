@@ -5,16 +5,22 @@
 
 #ifdef _WIN32
 
-#ifdef VOXELS_EXPORT
-#define VOXELS_API __declspec(dllexport)
+    #ifdef VOXELS_EXPORT
+        #define VOXELS_API __declspec(dllexport)
+    #else
+        #define VOXELS_API __declspec(dllimport)
+    #endif
+
+    #define VOXELS_CDECL __cdecl
+
 #else
-#define VOXELS_API __declspec(dllimport)
-#endif
 
-#define VOXELS_CDECL __cdecl
+    #ifdef VOXELS_EXPORT
+        #define VOXELS_API __attribute__((visibility("default")))
+    #else
+        #define VOXELS_API
+    #endif
 
-#else
-
-#pragma error Voxels currently supports Windows only.
+    #define VOXELS_CDECL
 
 #endif

@@ -56,6 +56,7 @@ enum InitError
 /// @return If the library was successfully initialized
 extern "C" VOXELS_API Voxels::InitError VOXELS_CDECL InitializeVoxels(int version, Voxels::LogMessage logger, Voxels::VoxelsAllocators* allocators);
 
+
 /// Deinitializes the library
 ///
 extern "C" VOXELS_API void VOXELS_CDECL DeinitializeVoxels();

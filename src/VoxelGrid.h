@@ -133,7 +133,7 @@ private:
 	VoxelGrid(const VoxelGrid&);
 	VoxelGrid& operator=(const VoxelGrid&);
 
-	static const unsigned CURRENT_FILE_VER = 1;
+    static const int CURRENT_FILE_VER = 1;
 };
 
 unsigned VoxelGrid::CalculateInternalBlockId(const glm::vec3& blockCoords) const

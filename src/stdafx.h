@@ -3,9 +3,13 @@
 // Voxels Library, please see LICENSE for licensing details.
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <Windows.h>
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #define NOMINMAX
+    #include <Windows.h>
+#else
+    #include <cstdlib>
+#endif
 
 #include <utility>
 #include <memory>
@@ -19,10 +23,8 @@
 
 #define VOXELS_LOG_SIZE 512
 
-#include <glm/glm.hpp>
+#include <glm.hpp>
 
-#include <profi_decls.h>
-#include <profi.h>
 #include "../include/Declarations.h"
 #include "../include/Library.h"
 

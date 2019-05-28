@@ -8,14 +8,15 @@
 #include "../include/MaterialMap.h"
 #include "../include/Grid.h"
 
-#include <../dx11-framework/Utilities/MathInlines.h>
+#include <MathInlines.h>
 
 #include "StdAllocatorAligned.h"
 #include "StructConversions.h"
 #include "Aligned.h"
 
-#include <glm/gtx/norm.hpp>
+#include <gtx/norm.hpp>
 #include <iterator>
+#include <unistd.h>
 
 #ifndef PROFI_ENABLE
 	#ifndef _DEBUG
@@ -128,7 +129,7 @@ void PolygonMap::Statistics::Reset()
 	DegenerateTrianglesRemoved = 0;
 	BlocksCalculated = 0;
 	
-	std::fill(PerCaseCellsCount, PerCaseCellsCount + _countof(PerCaseCellsCount), 0);
+	std::fill(PerCaseCellsCount, PerCaseCellsCount + (sizeof(PerCaseCellsCount) / sizeof(PerCaseCellsCount[0])), 0);
 }
 
 PolygonMap::PolygonMap()
@@ -467,8 +468,6 @@ struct TransVoxelRun
 	
 	ResultType* Execute()
 	{
-		PROFI_SCOPE(m_Result ? "Polygonize partial" : "Polygonize full")
-
 		const auto gridWidth = m_Grid.GetWidth();
 		const auto gridDepth = m_Grid.GetDepth();
 		const auto gridHeight = m_Grid.GetHeight();
@@ -504,8 +503,12 @@ struct TransVoxelRun
 			{
 				Block& block = m_LoadedBlocks[blockIt];
 				{
-					__declspec(thread) static auto tid = 0;
-					tid = ::GetCurrentThreadId();
+					static auto tid = 0;
+                    #ifdef _WIN32
+					tid = GetCurrentThreadId();
+                    #else
+                    tid = getpid();
+                    #endif
 					auto cache = m_PerThreadCaches.find(tid);
 					if (cache == m_PerThreadCaches.end()) {
 						auto gridCachePtr = new GridBlocksCache(m_Grid);
@@ -541,7 +544,7 @@ private:
 	TransVoxelRun(const TransVoxelRun&);
 	TransVoxelRun& operator=(const TransVoxelRun&);
 
-	static const unsigned INVALID_INDEX = 0xFFFFFFFF;
+    enum { INVALID_INDEX = 0xFFFFFFFF };
 
 	struct Cell
 	{
@@ -968,9 +971,7 @@ private:
 
 	Cell MakeCell(const Coord& globalCoords, unsigned levelMultiplier)
 	{
-		PROFI_SCOPE_S3("MakeCell - coords")
-
-			Cell result;
+		Cell result;
 		result.Base = globalCoords;
 		result.LevelMultiplier = levelMultiplier;
 		result.LocalBase = glm::vec3((int)globalCoords.x % (BLOCK_EXTENT * levelMultiplier) / levelMultiplier,
@@ -1051,9 +1052,7 @@ private:
 
 	Cell MakeCell(const Block& block, const Coord& localCoords)
 	{
-		PROFI_SCOPE_S3("MakeCell - block")
-
-			Cell result;
+		Cell result;
 		result.Base = Coord((localCoords.x + block.Coords.x * BLOCK_EXTENT) * block.LevelMultiplier
 			, (localCoords.y + block.Coords.y * BLOCK_EXTENT) * block.LevelMultiplier
 			, (localCoords.z + block.Coords.z * BLOCK_EXTENT) * block.LevelMultiplier);
@@ -1124,7 +1123,6 @@ private:
 			}
 			if (!blockFound)
 			{
-				PROFI_SCOPE_S3("Fetch distance block");
 				m_Grid.GetBlockData(blockCoordsf3, m_Cache[m_CacheToEvict]);
 				m_CachedBlocks[m_CacheToEvict].first = blockLevel;
 				m_CachedBlocks[m_CacheToEvict].second = blockId;
@@ -1174,7 +1172,6 @@ private:
 			}
 			if (!materialBlockFound)
 			{
-				PROFI_SCOPE_S3("Fetch material block")
 				const auto vec3coords = glm::vec3(blockCoordsf3.x, blockCoordsf3.y, blockCoordsf3.z);
 				m_Grid.GetMaterialBlockData(vec3coords,
 					(unsigned char*)(m_MaterialCache[m_MaterialCacheToEvict]),
@@ -1201,8 +1198,7 @@ private:
 		}
 
 		const Voxels::VoxelGrid& m_Grid;
-		static const unsigned BLOCKS_CACHE_SIZE = 8u;
-		static const unsigned FREE_BLOCK = 0xFFFFFFFF;
+        enum { BLOCKS_CACHE_SIZE = 8u, FREE_BLOCK = 0xFFFFFFFF };
 
 		glm::vec3 m_GridSzMinusOne;
 		glm::vec3 m_BlockExt;
@@ -1265,7 +1261,6 @@ private:
 	
 	void PushBlocksToResult()
 	{
-		PROFI_SCOPE_S2("Push blocks to result")
 		const float normFactor = 1 / 256.f;
 		const float transitionNormFactor = 1 / 256.f;
 
@@ -1527,10 +1522,7 @@ private:
 	}
 
 	void PolygonizeBlock(Block& block, PolygonMap& outputMap)
-	{			
-		PROFI_SCOPE_S2("Polygonize block")
-
-		PROFI_SCOPE_S3(LEVEL_STRS[block.Level])
+	{
 		unsigned verticesIndices[15];
 		
 		assert(BLOCK_EXTENT == BLOCK_EXTENT && BLOCK_EXTENT == BLOCK_EXTENT);
@@ -1753,8 +1745,6 @@ private:
 
 	void GenerateTransitionCells(Block& block)
 	{
-		PROFI_SCOPE_S2("Generate transition cells")
-
 		int row = 0, highRow = 0;
 		int column = 0, highColumn = 0;
 		const int minDim = 0;
@@ -2141,8 +2131,8 @@ private:
 	// TODO: load and keep in memory only the needed blocks
 	BlocksVec m_LoadedBlocks;
 
-	static __declspec(thread) GridBlocksCache* ts_BlocksCache;
-	typedef concurrency::concurrent_unordered_map<int, GridBlocksCache*> GridBlockMap;
+	static GridBlocksCache* ts_BlocksCache;
+	typedef tbb::concurrent_unordered_map<int, GridBlocksCache*> GridBlockMap;
 	GridBlockMap m_PerThreadCaches;
 
 	ResultType* m_Result;
@@ -2172,7 +2162,7 @@ unsigned GetBlockExtent() {
 	return BLOCK_EXTENT;
 }
 
-__declspec(thread) TransVoxelRun::GridBlocksCache* TransVoxelRun::ts_BlocksCache = nullptr;
+TransVoxelRun::GridBlocksCache* TransVoxelRun::ts_BlocksCache = nullptr;
 
 }
 
